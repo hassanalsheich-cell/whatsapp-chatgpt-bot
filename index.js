@@ -13,25 +13,28 @@ app.get("/", (req, res) => {
   res.send("WhatsApp ChatGPT Bot is running!");
 });
 
-app.post("/chat", async (req, res) => {
-  try {
-    const message = req.body.message;
+// Webhook verification
+app.get("/webhook", (req, res) => {
+  const verify_token = "myverifytoken";
 
-    const completion = await client.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [{ role: "user", content: message }],
-    });
+  const mode = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
+  const challenge = req.query["hub.challenge"];
 
-    res.json({
-      reply: completion.choices[0].message.content,
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).send("Error");
+  if (mode && token === verify_token) {
+    res.status(200).send(challenge);
+  } else {
+    res.sendStatus(403);
   }
 });
 
-const PORT = process.env.PORT || 3000;
+// Receive messages
+app.post("/webhook", async (req, res) => {
+  console.log(req.body);
+  res.sendStatus(200);
+});
+
+const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
